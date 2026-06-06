@@ -1,0 +1,484 @@
+3. Design
+
+
+(Project Title)
+
+
+
+Wealth Tracker • 재테크 파트너
+
+
+
+(Logo) - option
+
+
+
+
+(Student No, Name, E-mail) Student No 22413232 Name 조신천 E-Mail
+
+
+2531253060@qq.com /zhaochenchen946@gmail.com
+
+
+
+GitHub repository 주소 : https://github.com/wealth-tracker-22413232/assignment
+                            [ Revision history ]
+
+   Revisio n date     Version #            Description         Author
+24/03/2026          1.00          First draft            조신천
+
+02/05/2026          1.01          Second draft           조신천
+
+31/05/2026          1.02          Third draft            조신천
+                                                                 = Contents =
+
+
+
+
+1.    Introduction ........................................................................................ ..
+
+
+
+2.    Class diagram ........................................................................................
+
+
+
+3.    Sequence
+
+diagram ..................................................................................
+
+4.    State machine
+
+diagram ............................................................................
+
+5.    Implementation
+
+requirements ...................................................................
+6.
+Glossary ................................................................................................. ...
+7.
+References ............................................................................................. ....
+    Summarize the contents of this document.
+
+
+    - Describe the important points of your design.
+
+
+    12pt, 160%.
+
+1. Introduction
+
+
+
+
+  현대인들은 일상적인 개인 재무 관리에 많은 어려움을 겪고 있다. 수입과 지출을
+  체계적으로 기록하지 않은 채 소비하는 경우가 대부분이며, 결과적으로 자신의 돈이
+  어디에 어떻게 사용되었는지 파악하지 못해 예산 계획에 어려움을 겪는다. 이러한
+  문제는 개인뿐만 아니라 소규모 모임이나 팀 활동에서도 동일하게 나타난다.
+
+
+
+
+  기존의 재무 관리 앱들은 다양한 기능을 제공하지만, 지나치게 복잡하고 학습 곡선이
+  가파르다는 단점이 있다. 단순히 수입과 지출을 기록하고 자신의 소비 패턴을 빠르게
+  확인하려는 사용자에게는 오히려 불편함을 준다.
+
+
+  이에 따라 본 시스템은 Simple Expense Tracker 로, 불필요한 복잡성 없이 일상적인 재무
+  활동을 쉽고 빠르게 기록할 수 있도록 설계되었다. 개인은 물론 소규모 그룹의 재무
+  관리 요구까지 충족할 수 있는 간편한 도구를 목표로 한다.
+
+
+  이 시스템을 통해 이루고자 하는 첫 번째 목표는 사용자의 편리한 지출 기록 및
+  관리이다. 사용자는 식비, 교통비, 쇼핑, 엔터테인먼트 등 명확한 분류 체계를 통해 하루
+  단위로 지출을 입력할 수 있으며, 직관적인 일간, 주간, 월간 요약을 제공받는다.
+
+
+  두 번째 목표는 효과적인 예산 설정 및 소비 절감이다. 사용자가 개인 예산을 설정할 수
+  있도록 하여 과소비를 방지하고, 재무 지식이 없는 일반인도 부담 없이 자신의 자금
+  흐름을 파악할 수 있게 돕는다. 궁극적으로는 불필요한 지출로 인한 경제적 손실을
+  줄이는 데 목적이 있다.
+
+
+  본 시스템의 주요 타겟은 재무 관리에 익숙하지 않은 일반 개인 사용자이지만, 필요에
+  따라 소규모 팀이나 모임에서도 활용할 수 있도록 확장성을 고려하여 설계되었다.
+  아래는 본 시스템 개발의 Design 단계에 관한 내용으로, 실제 구현에 직접적으로
+  관여하는 모든 요소들의 윤곽을 확정하고 구체적으로 디자인해 나가는 내용을 다루고
+  있다. 본 문서의 모든 세부 사항은 직접적인 구현 시 소스코드상에서의 용례와 완벽히
+  일치함을 목적으로 한다.
+
+
+
+
+      - Draw a class diagram.
+
+
+      Describe each class in detail (attributes, methods, others) (table type). 12pt,
+
+
+      160%.
+
+2. Class diagram
+
+
+  -
+
+  - 아래의 그림은 시스템의 Class Diagram 을 표현한 그림이다.
+Class Description
+1) LoginManager
+
+
+(1) Attributes
+· id:String : 로그인에 필요한 아이디
+· password:String : 로그인에 필요한 비밀번호
+
+
+(2) Methods
+· loginCheck(id:String, password:char) : boolean : 입력된 아이디와 비밀번호가 회원 정보와
+일치하는지 확인하는 메소드
+
+
+---
+
+
+2) User
+
+
+(1) Attributes
+ id:String : 사용자 아이디
+· password:String : 사용자 비밀번호
+
+
+(2) Methods
+· login() : boolean : 로그인을 수행하는 메소드
+· logout() : void : 로그아웃을 수행하는 메소드
+---
+
+
+3) Server
+
+
+(1) Attributes
+· expense_list:ArrayList<Expense> : 모든 지출 내역을 저장하는 리스트
+· budget_list:ArrayList<Budget> : 모든 예산 정보를 저장하는 리스트
+· category_list:ArrayList<Category> : 모든 카테고리를 저장하는 리스트
+
+
+(2) Methods
+· loadDataFromFile() : void : 파일 시스템에서 데이터를 불러와 리스트에 저장하는 메소드
+· saveDataToFile() : void : 리스트에 있는 데이터를 파일 시스템에 저장하는 메소드
+· validateFileSystem() : boolean : 파일 시스템이 정상적으로 작동하는지 확인하는 메소드
+
+
+---
+
+
+4) ManageExpense
+
+
+(1) Attributes
+· expenseList:ArrayList<Expense> : 관리 대상인 지출 내역 리스트
+
+
+(2) Methods
+· addExpense(expense:Expense) : void : 새로운 지출 내역을 리스트에 추가하는 메소드
+· deleteExpense(index:int) : void : 특정 인덱스의 지출 내역을 삭제하는 메소드
+· getTotalExpense() : double : 전체 지출 금액의 합계를 반환하는 메소드
+· getExpenseList() : ArrayList<Expense> : 현재 지출 내역 리스트를 반환하는 메소드
+
+
+---
+
+
+5) ManageBudget
+
+
+(1) Attributes
+· budgetList:ArrayList<Budget> : 관리 대상인 예산 리스트
+
+
+(2) Methods
+· setMonthlyBudget(budget:Budget) : void : 월별 예산을 설정하는 메소드
+· checkBudgetOverrun(category:Category) : boolean : 특정 카테고리의 지출이 예산을
+초과했는지 확인하는 메소드
+· getBudgetStatus() : String : 현재 예산 상태(초과 여부 등)를 문자열로 반환하는 메소드
+
+
+---
+
+
+6) ViewReport
+
+
+(1) Attributes
+· reportData:ArrayList<Expense> : 보고서 생성을 위한 지출 데이터
+
+
+(2) Methods
+· generateReport(type:String) : String : 요청한 타입(일별, 월별 등)의 보고서를 생성하는
+메소드
+· exportToCSV() : void : 보고서 데이터를 CSV 파일로 내보내는 메소드
+· exportToJSON() : void : 보고서 데이터를 JSON 파일로 내보내는 메소드
+· printReport() : void : 보고서를 프린터로 출력하는 메소드
+
+
+---
+
+
+7) Expense
+
+
+(1) Attributes
+· amount:double : 지출 금액
+· date:String : 지출 날짜
+· description:String : 지출 내역 설명
+· category:Category : 지출 카테고리
+
+
+(2) Methods
+· getAmount() : double : 지출 금액을 반환하는 메소드
+· getDate() : String : 지출 날짜를 반환하는 메소드
+
+
+---
+
+
+8) Budget
+
+
+(1) Attributes
+· month:String : 예산이 설정된 월
+· limitAmount:double : 해당 월의 예산 제한 금액
+· category:Category : 예산이 적용되는 카테고리
+(2) Methods
+· getRemainingBudget() : double : 남은 예산 금액을 계산하여 반환하는 메소드
+
+
+---
+
+
+9) Category
+
+
+(1) Attributes
+· categoryName:String : 카테고리 이름 (예: 식비, 교통비)
+· type:String : 카테고리 타입 (수입 또는 지출)
+
+
+(2) Methods
+· getName() : String : 카테고리 이름을 반환하는 메소드
+
+
+---
+- Draw sequence diagrams for the whole functions of your system (this is related to the use cases
+
+
+ you made in the Conceptualization phase).
+
+
+- Explain each sequence diagram.
+
+
+12pt, 160%.
+
+ 3. Sequence diagram
+
+
+
+
+아래의 그림들은 Conceptualization 에서 표현한 기능들을 Sequence Diagram 으로
+표현한 그림들이다.
+
+
+
+
+위의 그림은 시스템 실행 후 로그인 기능을 수행할 때를 표현한 Sequence
+Diagram 이다. 사용자가 아이디와 비밀번호를 입력하면 LoginManager 의
+loginCheck 메소드를 호출한다. 인증 성공 시 메인 화면(MainPortal)을
+활성화하고, 실패 시 오류 메시지를 표시한다.
+아래의 그림은 시스템의 기능 중 “회원가입”에 대한 Sequence Diagram 이다.
+
+
+
+
+시스템 실행 후 “Register” 버튼을 누르면 “RegisterUI” GUI 클래스가
+setVisible(true) 되고 회원가입 화면이 나타난다. 각 입력란에 정보를 입력하면
+UserManager 클래스의 initiateUserInfo 메소드가 입력된 데이터를 받아 아이디
+중복 여부와 비밀번호 일치 여부를 확인한다. 검증 결과가 true 이면
+saveUserToFile 메소드를 호출해 Server 에 회원 정보를 저장하고 사용자에게 OK
+메시지를 보여준다. 만약 검증에 실패하면 Error 메시지를 표시한다.
+아래의 그림은 시스템의 기능 중 “지출 내역 조회”에 대한 Sequence
+Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 "InquiryExpense" 기능을 선택하면 해당 클래스가 실행된다.
+Server 클래스에서 getCurrentUserAuth() 메소드를 통해 현재 로그인한 사용자의
+권한을 확인한다. 권한이 Admin 이면 getAllExpenseData() 메소드로 모든 지출
+데이터를 가져온다. 권한이 일반 사용자이면 getCurrentUserId() 메소드로 사용자
+ID 를 확인하고 findUserExpense() 메소드를 통해 해당 사용자의 지출 데이터만
+가져와서 출력한다.
+아래의 그림은 시스템의 기능 중 “예산 현황 조회”에 대한 Sequence
+Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 “InquiryBudget” 기능을 선택하게 되면 해당 클래스를
+실행한다. 현재 사용자의 권한은 체크하지 않고 “Server” 클래스로부터 예산
+현황이 담겨있는 파일을 열어 데이터를 가져온 후 getBudget() 메소드를 통해
+화면에 출력한다.
+아래의 그림은 시스템의 기능 중 “ManageExpense”에 대한 Sequence
+Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 “ManageExpense” 메뉴를 선택하면 해당 클래스가
+실행된다. 화면 생성 전에 우선적으로 로그인한 사용자의 권한을 체크한다.
+authority 가 “true”이면 관리자이므로 해당 기능을 실행한다. 반대로 “false”이면
+일반 회원이므로 권한 없음 오류 메시지를 출력하고 기능을 실행시키지 않는다.
+화면이 생성되고 “Server” 클래스로부터 저장된 지출 데이터를 가져온 뒤
+테이블을 생성한다. 그리고 화면을 띄워 관리자에게 보여준다.
+아래의 그림은 시스템의 기능 중 “ManageBudget”에 대한 Sequence
+Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 “ManageBudget” 메뉴를 선택하면 해당 클래스가 실행된다.
+화면 생성 전에 우선적으로 로그인한 사용자의 권한을 체크한다. authority 가
+“true”이면 관리자이므로 해당 기능을 실행한다. 반대로 “false”이면 일반
+회원이므로 오류 메시지를 출력하고 기능을 실행시키지 않는다.
+
+
+화면이 생성되고 “Server” 클래스로부터 예산 데이터를 가져오게 된다. 현재 남은
+예산 금액을 파악하기 위해 extractBalance() 메소드로 데이터를 추출하고,
+getCurrentBalance() 메소드를 통해 잔액을 변수에 저장한다. 그 후 saveData()
+메소드를 통해 수정된 예산 데이터를 서버에 저장한다.
+아래의 그림은 시스템의 기능 중 “ViewReport”에 대한 Sequence Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 “ViewReport” 메뉴를 선택하면 해당 클래스가 실행된다.
+“ReportDataManager” 클래스에서 보고서 유형에 맞는 데이터를 생성하고,
+“ViewReport” 클래스에서 생성된 데이터와 기존에 저장된 지출 및 예산 데이터를
+통합하여 화면을 구성한다.
+
+
+generateReport() 메소드는 선택한 타입의 보고서를 생성하는 역할을 하고,
+loadReportData()는 서버로부터 데이터를 불러와 보고서에 반영한다.
+refreshReport()는 보고서 내용을 갱신하고, 이것을 Thread 로 실시간 반영해 최종
+보고서 창을 화면에 출력한다.
+아래의 그림은 시스템의 기능 중 “ExportReport”에 대한 Sequence
+ Diagram 이다.
+
+
+
+
+메인 메뉴(Portal)에서 “ExportReport” 메뉴를 선택하면 해당 클래스가 실행된다.
+화면을 생성하기 전 권한을 확인하고 관리자만 기능을 사용할 수 있도록
+제한한다. 권한 확인이 완료되면 간단한 출력 화면이 표시되고, 라디오 버튼으로
+지출 또는 예산 데이터를 선택한 후 Text 또는 Excel 형식 버튼을 클릭해 보고서
+파일을 내보내고 출력한다.
+    Draw state machine diagrams for the client and the server system.
+                                                                  -
+
+
+    Explain each state machine diagram.
+
+
+    12pt, 160%.
+
+4. State machine diagram
+-
+
+
+
+
+- 위의 그림은 Simple Expense Tracker 시스템의 State machine Diagram 을 표현한 그림이다.
+사용자가 시스템을 실행하면 Launch System 상태가 된다. 이후 Login 또는 Register 상태를
+거쳐 메인 메뉴인 Main Menu (Portal) 에 진입한다. 메인 메뉴에서는 사용자의 권한에
+따라 Add Expense, View Report, Manage Budget 등의 기능을 선택할 수 있다. 각 기능
+수행이 완료되면 다시 메인 메뉴로 돌아오며, Logout 상태를 통해 시스템을 종료한
+5. Implementation requirements
+  1) Hardware Requirements
+    Component                     Specification
+    CPU                           Intel Pentium IV 이상
+    RAM                           1GB 이상
+    HDD/SSD                       10GB 이상
+    Network                       연결 안 되어도 됨 (로컬 파일 시스템
+                                  기반)
+
+
+  2) Software Requirements
+    Component                     Specification
+    Operating System              Windows 7 이상
+    Implementation Language       Java (version 1.8.0 이상)
+
+
+
+  3) Nonfunctional Requirements
+
+
+  해당 시스템은 서버가 없으며 서버의 역할을 하는 Server 클래스가 있다. 그리고
+  데이터베이스 없음으로 데이터베이스의 기능을 하는 Server 클래스에 멤버
+  변수로 파일 경로를 저장하고 파일 입출력(File I/O)을 수행한다. Java Project
+  폴더에 있는 파일에서 데이터를 가져와서 처리한다. 지출 내역 및 예산 정보가
+  파일에 저장되므로 프로그램을 종료한 후에도 데이터는 유지된다.
+
+
+
+
+6. Glossary
+
+
+    Terms                         Description
+    Class Diagram                 객체지향형 시스템 설계에서,
+                                  시스템의 논리 설계를 위한
+                                  클래스들의 존재와 그들의 관계를
+                                  도식으로 정의한 것. 단일 클래스
+                                                 다이어그램은 시스템 클래스 구조를
+                                                 보여줌.
+      State Machine Diagram                      상태 다이어그램은 컴퓨터 과학 및
+                                                 관련 분야에서 시스템의 동작을
+                                                 설명하는 데 사용되는 다이어그램의
+                                                 유형임. 상태 다이어그램은 설명 된
+                                                 시스템이 한정된 수의 상태로
+                                                 구성되어야 함.
+      JLabel                                     객체지향언어인 JAVA 언어의 GUI
+                                                 구현에 쓰이는 클래스 중 하나로써
+                                                 현실세계로 예를 들면 이름표라고 할
+                                                 수 있음.
+      boolean                                    컴퓨터 언어에 있는 데이터
+                                                 유형으로써 true 와 false 두 가지
+                                                 결과를 가짐.
+      ArrayList                                  Java 의 컬렉션 프레임워크 중 하나로,
+                                                 크기가 동적으로 변하는 배열을
+                                                 구현한 클래스. 데이터를 순차적으로
+                                                 저장하고 관리할 때 사용됨.
+      메소드 (Method)                               멤버 함수라고도 하며, 객체지향형
+                                                 프로그래밍 언어에서 클래스 혹은
+                                                 객체에 소속된 서브루틴을 가리킴.
+
+
+  -
+
+
+
+
+      - Describe all of your references (book, paper, technical report etc). 12pt,
+
+
+      160%.
+
+7. References
+
+
+  · 강의자료 : Structural Modeling II, Behavior Modeling I, II
+
+
+  · 참고자료 : Simple Expense Tracker System (Project Documentation)
+
