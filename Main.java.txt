@@ -1,0 +1,232 @@
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
+
+// Category
+enum Category {
+    FOOD, TRANSPORT, SHOPPING, ENTERTAINMENT, UTILITY, OTHER
+}
+
+// User
+class User {
+    private String id;
+    private String password;
+    public User(String id, String password) { this.id = id; this.password = password; }
+    public String getId() { return id; }
+    public String getPassword() { return password; }
+}
+
+// Expense
+class Expense {
+    private double amount;
+    private String date;
+    private String description;
+    private Category category;
+    private String userId;
+    public Expense(double amount, String date, String description, Category category, String userId) {
+        this.amount = amount; this.date = date; this.description = description;
+        this.category = category; this.userId = userId;
+    }
+    public double getAmount() { return amount; }
+    public String getDate() { return date; }
+    public String getDescription() { return description; }
+    public Category getCategory() { return category; }
+    public String getUserId() { return userId; }
+}
+
+// Budget
+class Budget {
+    private String month;
+    private double limitAmount;
+    private Category category;
+    private String userId;
+    public Budget(String month, double limitAmount, Category category, String userId) {
+        this.month = month; this.limitAmount = limitAmount;
+        this.category = category; this.userId = userId;
+    }
+    public String getMonth() { return month; }
+    public double getLimitAmount() { return limitAmount; }
+    public Category getCategory() { return category; }
+    public String getUserId() { return userId; }
+}
+
+// Server
+class Server {
+    private List<Expense> expenseList = new ArrayList<>();
+    private List<Budget> budgetList = new ArrayList<>();
+    private List<User> userList = new ArrayList<>();
+    private final String EXPENSE_FILE = "expenses.txt";
+    private final String BUDGET_FILE = "budgets.txt";
+    private final String USER_FILE = "users.txt";
+
+    public Server() {
+        loadDataFromFile();
+        if (userList.isEmpty()) {
+            userList.add(new User("admin", "1234"));
+            userList.add(new User("test", "1111"));
+            saveDataToFile();
+        }
+    }
+
+    public void loadDataFromFile() {
+        expenseList.clear(); budgetList.clear(); userList.clear();
+        try (BufferedReader br = new BufferedReader(new FileReader(EXPENSE_FILE))) {
+            String line; while ((line = br.readLine()) != null) {
+                String[] p = line.split(",");
+                if (p.length == 5) expenseList.add(new Expense(Double.parseDouble(p[4]), p[0], p[2], Category.valueOf(p[1]), p[3]));
+            }
+        } catch (IOException e) {}
+        try (BufferedReader br = new BufferedReader(new FileReader(BUDGET_FILE))) {
+            String line; while ((line = br.readLine()) != null) {
+                String[] p = line.split(",");
+                if (p.length == 4) budgetList.add(new Budget(p[0], Double.parseDouble(p[1]), Category.valueOf(p[2]), p[3]));
+            }
+        } catch (IOException e) {}
+        try (BufferedReader br = new BufferedReader(new FileReader(USER_FILE))) {
+            String line; while ((line = br.readLine()) != null) {
+                String[] p = line.split(",");
+                if (p.length == 2) userList.add(new User(p[0], p[1]));
+            }
+        } catch (IOException e) {}
+    }
+
+    public void saveDataToFile() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(EXPENSE_FILE))) {
+            for (Expense e : expenseList) pw.println(e.getDate() + "," + e.getCategory() + "," + e.getDescription() + "," + e.getUserId() + "," + e.getAmount());
+        } catch (IOException e) {}
+        try (PrintWriter pw = new PrintWriter(new FileWriter(BUDGET_FILE))) {
+            for (Budget b : budgetList) pw.println(b.getMonth() + "," + b.getLimitAmount() + "," + b.getCategory() + "," + b.getUserId());
+        } catch (IOException e) {}
+        try (PrintWriter pw = new PrintWriter(new FileWriter(USER_FILE))) {
+            for (User u : userList) pw.println(u.getId() + "," + u.getPassword());
+        } catch (IOException e) {}
+    }
+
+    public List<Expense> getExpenseList() { return expenseList; }
+    public List<Budget> getBudgetList() { return budgetList; }
+    public List<User> getUserList() { return userList; }
+    public void addExpense(Expense e) { expenseList.add(e); saveDataToFile(); }
+    public void addBudget(Budget b) { budgetList.add(b); saveDataToFile(); }
+}
+
+// LoginManager
+class LoginManager {
+    public static boolean loginCheck(String id, String password, List<User> users) {
+        for (User u : users) {
+            if (u.getId().equals(id) && u.getPassword().equals(password)) return true;
+        }
+        return false;
+    }
+}
+
+// ManageExpense
+class ManageExpense {
+    private Server server;
+    public ManageExpense(Server server) { this.server = server; }
+    public void addExpense(Expense e) { server.addExpense(e); System.out.println("✅ 支出已添加"); }
+    public void deleteExpense(int index, String userId) {
+        List<Expense> list = server.getExpenseList();
+        int removeIdx = -1, idx = 0;
+        for (Expense e : list) {
+            if (e.getUserId().equals(userId) && idx++ == index) { removeIdx = list.indexOf(e); break; }
+        }
+        if (removeIdx != -1) { list.remove(removeIdx); server.saveDataToFile(); System.out.println("✅ 已删除"); }
+        else System.out.println("❌ 未找到");
+    }
+    public void showExpenseList(String userId) {
+        System.out.println("\n[我的支出列表]");
+        int idx = 0;
+        for (Expense e : server.getExpenseList()) {
+            if (e.getUserId().equals(userId)) System.out.println(idx++ + ". " + e.getDate() + " | " + e.getCategory() + " | " + e.getDescription() + " | " + e.getAmount() + "元");
+        }
+    }
+}
+
+// ManageBudget
+class ManageBudget {
+    private Server server;
+    public ManageBudget(Server server) { this.server = server; }
+    public void setMonthlyBudget(Budget b) { server.addBudget(b); System.out.println("✅ 预算已设置"); }
+    public void checkBudgetOverrun(String userId, Category category, double spent) {
+        for (Budget b : server.getBudgetList()) {
+            if (b.getUserId().equals(userId) && b.getCategory() == category) {
+                if (spent > b.getLimitAmount()) System.out.println("⚠️ 警告: " + category + " 超出预算! (限额: " + b.getLimitAmount() + "元)");
+                else System.out.println("✅ " + category + " 预算正常 (剩余: " + (b.getLimitAmount() - spent) + "元)");
+                return;
+            }
+        }
+        System.out.println("📌 " + category + " 未设置预算");
+    }
+}
+
+// Main
+public class Main {
+    public static void main(String[] args) {
+        Server server = new Server();
+        ManageExpense manageExpense = new ManageExpense(server);
+        ManageBudget manageBudget = new ManageBudget(server);
+        Scanner sc = new Scanner(System.in);
+        String loggedInUser = null;
+
+        while (true) {
+            if (loggedInUser == null) {
+                System.out.println("\n=== Wealth Tracker ===");
+                System.out.print("1.登录 2.注册 3.退出 >> ");
+                String choice = sc.nextLine();
+                if (choice.equals("1")) {
+                    System.out.print("账号: "); String id = sc.nextLine();
+                    System.out.print("密码: "); String pw = sc.nextLine();
+                    if (LoginManager.loginCheck(id, pw, server.getUserList())) { loggedInUser = id; System.out.println("✅ 登录成功: " + id); }
+                    else System.out.println("❌ 登录失败");
+                } else if (choice.equals("2")) {
+                    System.out.print("新账号: "); String id = sc.nextLine();
+                    System.out.print("密码: "); String pw = sc.nextLine();
+                    server.getUserList().add(new User(id, pw)); server.saveDataToFile();
+                    System.out.println("✅ 注册成功");
+                } else if (choice.equals("3")) break;
+            } else {
+                System.out.println("\n===== 主菜单 (" + loggedInUser + ") =====");
+                System.out.println("1.添加支出\n2.支出列表\n3.删除支出\n4.设置预算\n5.检查预算\n6.查看报告\n7.登出");
+                System.out.print("选择 >> ");
+                String menu = sc.nextLine();
+                if (menu.equals("1")) {
+                    System.out.print("日期(YYYY-MM-DD): "); String date = sc.nextLine();
+                    System.out.print("分类(FOOD/TRANSPORT/SHOPPING/ENTERTAINMENT/UTILITY/OTHER): ");
+                    Category cat = Category.valueOf(sc.nextLine().toUpperCase());
+                    System.out.print("说明: "); String desc = sc.nextLine();
+                    System.out.print("金额: "); double amt = Double.parseDouble(sc.nextLine());
+                    manageExpense.addExpense(new Expense(amt, date, desc, cat, loggedInUser));
+                } else if (menu.equals("2")) manageExpense.showExpenseList(loggedInUser);
+                else if (menu.equals("3")) {
+                    manageExpense.showExpenseList(loggedInUser);
+                    System.out.print("要删除的序号: "); int idx = Integer.parseInt(sc.nextLine());
+                    manageExpense.deleteExpense(idx, loggedInUser);
+                } else if (menu.equals("4")) {
+                    System.out.print("月份(YYYY-MM): "); String month = sc.nextLine();
+                    System.out.print("分类: "); Category cat = Category.valueOf(sc.nextLine().toUpperCase());
+                    System.out.print("预算限额: "); double limit = Double.parseDouble(sc.nextLine());
+                    manageBudget.setMonthlyBudget(new Budget(month, limit, cat, loggedInUser));
+                } else if (menu.equals("5")) {
+                    System.out.print("分类: "); Category cat = Category.valueOf(sc.nextLine().toUpperCase());
+                    double spent = 0;
+                    for (Expense e : server.getExpenseList()) {
+                        if (e.getUserId().equals(loggedInUser) && e.getCategory() == cat) {
+                            spent += e.getAmount();
+                        }
+                    }
+                    manageBudget.checkBudgetOverrun(loggedInUser, cat, spent);
+                } else if (menu.equals("6")) {
+                    System.out.println("\n===== 支出报告 =====");
+                    double total = 0;
+                    for (Expense e : server.getExpenseList()) {
+                        if (e.getUserId().equals(loggedInUser)) {
+                            System.out.println(e.getDate() + " | " + e.getCategory() + " | " + e.getDescription() + " | " + e.getAmount() + "元");
+                            total += e.getAmount();
+                        }
+                    }
+                    System.out.println("📊 总支出: " + total + "元");
+                } else if (menu.equals("7")) { loggedInUser = null; System.out.println("已登出"); }
+            }
+        }
+    }
+}
